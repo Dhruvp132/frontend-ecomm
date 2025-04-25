@@ -1,19 +1,26 @@
-import React from "react";
+import React, { useState } from "react";
 import "./Header.css";
 import SearchIcon from "@material-ui/icons/Search";
 import ShoppingBasketIcon from "@material-ui/icons/ShoppingBasket";
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import { useStateValue } from "./StateProvider";
 import { auth } from "./firebase";
 
 function Header() {
   const [{ basket, user }, dispatch] = useStateValue();
+  const [searchInput, setSearchInput] = useState("");
+  const history = useHistory();
 
   const handleAuthenticaton = () => {
     if (user) {
       auth.signOut();
     }
   }
+  
+  const handleSearch = (e) => {
+    e.preventDefault();
+    history.push(`/?search=${searchInput}`); // Pass the search keyword as a query parameter
+  };
 
   return (
     <div className="header">
@@ -25,8 +32,14 @@ function Header() {
       </Link>
 
       <div className="header__search">
-        <input className="header__searchInput" type="text" />
-        <SearchIcon className="header__searchIcon" />
+        <input
+          className="header__searchInput"
+          type="text"
+          placeholder="Search here..."
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+        />
+        <SearchIcon className="header__searchIcon" onClick={handleSearch} />
       </div>
 
       <div className="header__nav">
@@ -44,6 +57,11 @@ function Header() {
           </div>
         </Link>
         
+        <Link to='/collab'>
+          <div className="header__option">
+            <span className="header__optionLineOne">Collab</span>
+          </div>
+        </Link>
 
         <div className="header__option">
           <span className="header__optionLineOne">Your</span>

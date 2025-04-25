@@ -1,37 +1,46 @@
 import React, { useState } from 'react';
-import './Login.css'
+import './Login.css';
 import { Link, useHistory } from "react-router-dom";
-import { auth } from "./firebase";
+import { auth, db } from "./firebase"; // Firestore imported from firebase.js
 
 function Login() {
     const history = useHistory();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const signIn = e => {
+    const signIn = (e) => {
         e.preventDefault();
 
-        auth
-            .signInWithEmailAndPassword(email, password)
-            .then(auth => {
-                history.push('/')
+        auth.signInWithEmailAndPassword(email, password)
+            .then(() => {
+                history.push('/');
             })
-            .catch(error => alert(error.message))
-    }
+            .catch(error => alert(error.message));
+    };
 
-    const register = e => {
+    const register = (e) => {
         e.preventDefault();
 
-        auth
-            .createUserWithEmailAndPassword(email, password)
-            .then((auth) => {
-                // it successfully created a new user with email and password
-                if (auth) {
-                    history.push('/')
+        auth.createUserWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                console.log(user); 
+                if (user) {
+                    // Save user details in Firestore
+                    db.collection("users").doc(user.uid).set({
+                        uid: user.uid,
+                        email: user.email,
+                        createdAt: new Date(),
+                    })
+                    .then(() => {
+                        console.log("User added to Firestore");
+                        history.push('/');
+                    })
+                    .catch(error => alert(error.message));
                 }
             })
-            .catch(error => alert(error.message))
-    }
+            .catch(error => alert(error.message));
+        };
 
     return (
         <div className='login'>
@@ -39,6 +48,7 @@ function Login() {
                 <img
                     className="login__logo"
                     src='https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/1024px-Amazon_logo.svg.png' 
+                    alt="Amazon Logo"
                 />
             </Link>
 
@@ -63,7 +73,7 @@ function Login() {
                 <button onClick={register} className='login__registerButton'>Create your Amazon Account</button>
             </div>
         </div>
-    )
+    );
 }
 
-export default Login
+export default Login;

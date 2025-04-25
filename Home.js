@@ -2,23 +2,60 @@ import React, { useState, useEffect } from "react";
 import "./Home.css";
 import Product from "./Product";
 import axios from "axios";
+import { useLocation } from "react-router-dom";
+
 
 function Home() {
   const [fetchedProducts, setFetchedProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const location = useLocation();
+
+  // Extract search keyword from query parameters
+  const searchKeyword = new URLSearchParams(location.search).get("search") || "";
 
   // Fetch products from the API
   useEffect(() => {
+    const addProducts = async () => {
+      const product = { id : 0, title: 'Samsung LC49RG90SSUXEN 49 Curved LED Gaming Monitor', price: 199.99, description: 'Super Ultra Wide Dual WQHD 5120 x 1440', category: "electronics", image: "https://images-na.ssl-images-amazon.com/images/I/71Swqqe7XAL._AC_SX466_.jpg" };
+      axios.post('https://fakestoreapi.com/products', product)
+        .then(response => console.log(response.data));
+    }
+
     const fetchProducts = async () => {
       try {
-        const { data } = await axios.get("http://localhost:5001/admin/");
-        setFetchedProducts(data.products || []); // Ensure the response contains products
+        const [localResponse, apiResponse] = await Promise.all([
+          axios.get("http://localhost:5001/admin/"),
+          axios.get("https://fakestoreapi.com/products")
+        ]);
+  
+        const localProducts = localResponse.data.products || [];
+        const apiProducts = apiResponse.data || [];
+  
+        // Combine both product arrays
+        const combinedProducts = [...localProducts, ...apiProducts];
+        setFetchedProducts(combinedProducts);
       } catch (err) {
         console.error("Error fetching products:", err);
       }
     };
 
+    addProducts(); 
     fetchProducts();
   }, []);
+
+  useEffect(() => {
+    if (searchKeyword) {
+      const filtered = fetchedProducts.filter(
+        (product) =>
+          product.title.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+          (product.description &&
+            product.description.toLowerCase().includes(searchKeyword.toLowerCase()))
+      );
+      setFilteredProducts(filtered);
+    } else {
+      setFilteredProducts(fetchedProducts);
+    }
+  }, [searchKeyword, fetchedProducts]);
 
   return (
     <div className="home">
@@ -30,7 +67,9 @@ function Home() {
         />
 
         {/* Hardcoded products */}
-        <div className="home__row">
+        {!searchKeyword && (
+          <div>
+          <div className="home__row">
           <Product
             id="12321341"
             title="The Lean Startup: How Constant Innovation Creates Radically Successful Businesses Paperback"
@@ -70,7 +109,6 @@ function Home() {
             image="https://images-na.ssl-images-amazon.com/images/I/816ctt5WV5L._AC_SX385_.jpg"
           />
         </div>
-
         <div className="home__row">
           <Product
             id="90829332"
@@ -80,23 +118,25 @@ function Home() {
             image="https://images-na.ssl-images-amazon.com/images/I/6125mFrzr6L._AC_SX355_.jpg"
           />
         </div>
+        </div>
+        )}
 
         {/* Fetched products in a scrollable section */}
         <div className="home__fetchedProducts">
-          <h2>Browse More Products</h2>
-          <div className="home__scrollable">
-            {fetchedProducts.map((product) => (
-              <Product
-                key={product.id} // Replace with appropriate unique key from the API
-                id={product.id}
-                title={product.title}
-                price={product.price}
-                rating={product.rating}
-                image={product.image}
-              />
-            ))}
-          </div>
+        <h2>Browse More Products</h2>
+        <div className="home__row_more">
+          {filteredProducts.map((product) => (
+            <Product
+              key={product.id} 
+              id={product.id}
+              title={product.title}
+              price={product.price}
+              rating={product.rating || 4} 
+              image={product.image}
+            />
+          ))}
         </div>
+      </div>
       </div>
     </div>
   );

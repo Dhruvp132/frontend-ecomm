@@ -7,7 +7,7 @@ import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import CurrencyFormat from "react-currency-format";
 import { getBasketTotal } from "./reducer";
 import axios from './axios';
-import { db } from "./firebase";
+
 
 function Payment() {
     const [{ basket, user }, dispatch] = useStateValue();
@@ -48,19 +48,32 @@ function Payment() {
             payment_method: {
                 card: elements.getElement(CardElement)
             }
-        }).then(({ paymentIntent }) => {
+        }).then(async ({ paymentIntent }) => {
             // paymentIntent = payment confirmation
+            // db
+            //   .collection('users')
+            //   .doc(user?.uid)
+            //   .collection('orders')
+            //   .doc(paymentIntent.id)
+            //   .set({
+            //       basket: basket,
+            //       amount: paymentIntent.amount,
+            //       created: paymentIntent.created
+            //   })
 
-            db
-              .collection('users')
-              .doc(user?.uid)
-              .collection('orders')
-              .doc(paymentIntent.id)
-              .set({
-                  basket: basket,
-                  amount: paymentIntent.amount,
-                  created: paymentIntent.created
-              })
+            // TODO: do a backend call to add the delivery/order to the database 
+            // where userId: is the user.emial and order is the basket with orderStatus:pending and paymentStatus: completed
+            // deliveryAgent to be assigned by the admin 
+
+            await axios.post('http://localhost:5001/delivery/add', {
+                orderId: paymentIntent.id,
+                userId: user?.email,
+                orderStatus: 'pending',
+                paymentStatus: 'completed',
+                deliveryId: `DEL-${paymentIntent.id}`,
+                deliveryAgentId: 'unassigned',
+                basket: basket,
+            });
 
             setSucceeded(true);
             setError(null)
@@ -70,7 +83,7 @@ function Payment() {
                 type: 'EMPTY_BASKET'
             })
 
-            history.replace('/orders')
+            history.replace('/payment-success', {paymentSuccess : true})
         })
 
     }

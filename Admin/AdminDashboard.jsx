@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { db } from "../firebase"; // Import Firestore from firebase.js
 import "./AdminDashboard.css"; // Importing CSS for styling and animations
 
 const AdminDashboard = () => {
   const [products, setProducts] = useState([]);
+  const [users, setUsers] = useState([]);
   const [form, setForm] = useState({ title: "", price: "", image: "" });
   const [editMode, setEditMode] = useState(false);
   const [editProductId, setEditProductId] = useState(null);
 
-  // Fetch products
+  // Fetch products and users on mount
   useEffect(() => {
+    fetchUsers();
     fetchProducts();
   }, []);
 
@@ -19,6 +22,30 @@ const AdminDashboard = () => {
       setProducts(data.products);
     } catch (err) {
       console.error("Error fetching products:", err);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const { data } = await axios.get("http://localhost:5001/admin/users");
+      setUsers(data);
+    } catch (err) {
+      console.error("Error fetching users:", err);
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    try {
+      // Remove from Firestore
+      await db.collection("users").doc(userId).delete();
+      alert("User deleted from Firestore");
+
+      // ❌ Firebase v8 does NOT allow client-side user deletion from Firebase Auth
+      // ❗ User deletion from Firebase Auth must be done on the backend with Firebase Admin SDK
+
+      fetchUsers(); // Refresh user list
+    } catch (err) {
+      console.error("Error deleting user:", err);
     }
   };
 
@@ -123,6 +150,29 @@ const AdminDashboard = () => {
           </div>
         ))}
       </div>
+
+      {/* User list */}
+      <h2>Users</h2>
+      <table className="user-table">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>UID</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map(user => (
+            <tr key={user.id}>
+              <td>{user.email}</td>
+              <td>{user.uid}</td>
+              <td>
+                <button onClick={() => handleDeleteUser(user.id)} className="delete-btn">Delete</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };

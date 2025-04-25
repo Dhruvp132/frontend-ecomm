@@ -12,9 +12,13 @@ import { useStateValue } from "./StateProvider";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import AdminDashboard from "./Admin/AdminDashboard";
-
+import DeliveryDashboard from "./Delivery/DeliveryDashboard";
+import PaymentSuccess from "./PaymentSuccess";
+import { Redirect } from "react-router-dom/cjs/react-router-dom";
+import CartDetails from "./components/CartDetails";
+import CollabCart from "./Collab/CollabCart";
 const promise = loadStripe(
-  "pk_test_51HPvU9DFg5koCdLGJJbNo60QAU99BejacsvnKvT8xnCu1wFLCuQP3WBArscK3RvSQmSIB3N0Pbsc7TtbQiJ1vaOi00X9sIbazL"
+  "pk_test_51R1R5HJlvCjqT1EtEInaYXkY3L2n7M2zXbE8FiO2EUZwMOqT7k3fJM0LOag5r7OIaX1XI7dQ4zsYd7lT4LRqenoA00q51mtuvJ"
 );
 
 function App() {
@@ -54,9 +58,21 @@ function App() {
           <Route path="/admin">
             <AdminDashboard />
           </Route>
+          {/* not gonna hit if i put that donw  */}
+          <Route path="/delivery/cartDetails/:userId" component={CartDetails} />
+          <Route path="/delivery">
+            <DeliveryDashboard />
+          </Route>
           <Route path="/login">
             <Login />
           </Route>
+          <Route path="/payment-success" render={(props) => (
+            props.location.state && props.location.state.paymentSuccess ? (
+              <PaymentSuccess />
+            ) : (
+              <Redirect to="/" />
+            )
+          )} />
           <Route path="/checkout">
             <Header />
             <Checkout />
@@ -66,6 +82,10 @@ function App() {
             <Elements stripe={promise}>
               <Payment />
             </Elements>
+          </Route>
+          <Route path="/collab">
+          <Header />
+          <CollabCart></CollabCart>
           </Route>
           <Route path="/">
             <Header />
