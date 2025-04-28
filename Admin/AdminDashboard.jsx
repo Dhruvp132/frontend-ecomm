@@ -18,7 +18,7 @@ const AdminDashboard = () => {
 
   const fetchProducts = async () => {
     try {
-      const { data } = await axios.get("http://localhost:5001/admin/");
+      const { data } = await axios.get("http://localhost:5001/admin/products");
       setProducts(data.products);
     } catch (err) {
       console.error("Error fetching products:", err);

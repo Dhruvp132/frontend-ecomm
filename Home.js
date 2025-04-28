@@ -24,7 +24,7 @@ function Home() {
     const fetchProducts = async () => {
       try {
         const [localResponse, apiResponse] = await Promise.all([
-          axios.get("http://localhost:5001/admin/"),
+          axios.get("http://localhost:5001/admin/products"),
           axios.get("https://fakestoreapi.com/products")
         ]);
   

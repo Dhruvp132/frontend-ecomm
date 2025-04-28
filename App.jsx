@@ -26,7 +26,7 @@ const promise = loadStripe(
 
 function App() {
   const [{}, dispatch] = useStateValue();
-
+  console.log("first")
   useEffect(() => {
     // will only run once when the app component loads...
 
